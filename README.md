@@ -1,6 +1,6 @@
 # Diffusion Models for Medical Anomaly Detection
 
-We provide the Pytorch implementation of our MICCAI 2022 submission "Diffusion Models for Medical Anomaly Detection" (paper 704).
+We provide the Pytorch implementation of our MICCAI 2022 submission ["Diffusion Models for Medical Anomaly Detection"](https://arxiv.org/abs/2203.04306).
 
 
 The implementation of Denoising Diffusion Probabilistic Models presented in the paper is based on [openai/guided-diffusion](https://github.com/openai/guided-diffusion).
@@ -12,6 +12,7 @@ We evaluated our method on the [BRATS2020 dataset](https://www.med.upenn.edu/cbi
 A mini-example how the data needs to be stored can be found in the folder *data*. To train or evaluate on the desired dataset, set `--dataset brats` or `--dataset chexpert` respectively. 
 
 ## Usage
+
 
 We set the flags as follows:
 ```
@@ -54,8 +55,12 @@ For sampling using the DDPM approach, run
 ```
 python scripts/classifier_sample_known.py  --data_dir path_to_testdata  --model_path ./results/model.pt --classifier_path ./results/classifier.pt  --dataset brats_or_chexpert --classifier_scale 100 --noise_level 500 $MODEL_FLAGS $DIFFUSION_FLAGS $CLASSIFIER_FLAGS 
 ```
+## Citation
 
-## Pretrained Models
-
-Here, we will post a link to the pretrained models.
-
+If you use this code, please cite
+@article{wolleb2022diffusion,
+  title={Diffusion Models for Medical Anomaly Detection},
+  author={Wolleb, Julia and Bieder, Florentin and Sandkühler, Robin and Cattin, Philippe C},
+  journal={arXiv preprint arXiv:2203.04306},
+  year={2022}
+}
