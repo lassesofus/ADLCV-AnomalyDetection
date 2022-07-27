@@ -1,9 +1,9 @@
 # Diffusion Models for Medical Anomaly Detection
 
 We provide the Pytorch implementation of our MICCAI 2022 submission ["Diffusion Models for Medical Anomaly Detection"](https://arxiv.org/abs/2203.04306).
-
-
 The implementation of Denoising Diffusion Probabilistic Models presented in the paper is based on [openai/guided-diffusion](https://github.com/openai/guided-diffusion).
+
+<img src="Result_DeScarGAN.jpg" width="60%">
 
 
 ## Data
@@ -57,10 +57,13 @@ python scripts/classifier_sample_known.py  --data_dir path_to_testdata  --model_
 ```
 ## Citation
 
-If you use this code, please cite
+If you use this code, please cite  
+
+```
 @article{wolleb2022diffusion,
-  title={Diffusion Models for Medical Anomaly Detection},
-  author={Wolleb, Julia and Bieder, Florentin and Sandkühler, Robin and Cattin, Philippe C},
-  journal={arXiv preprint arXiv:2203.04306},
-  year={2022}
-}
+    title={Diffusion Models for Medical Anomaly Detection},
+    author={Wolleb, Julia and Bieder, Florentin and Sandkühler, Robin and Cattin, Philippe C},
+    year={2022},
+    journal={arXiv preprint arXiv:2203.04306}
+```
+
