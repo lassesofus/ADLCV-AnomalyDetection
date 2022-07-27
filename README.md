@@ -3,7 +3,7 @@
 We provide the Pytorch implementation of our MICCAI 2022 submission ["Diffusion Models for Medical Anomaly Detection"](https://arxiv.org/abs/2203.04306).
 The implementation of Denoising Diffusion Probabilistic Models presented in the paper is based on [openai/guided-diffusion](https://github.com/openai/guided-diffusion).
 
-<img src="Result_DeScarGAN.jpg" width="60%">
+<img src="scheme_6_.png" width="70%">
 
 
 ## Data
