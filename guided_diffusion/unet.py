@@ -944,16 +944,9 @@ class EncoderUNetModel(nn.Module):
 
 
         if self.pool.startswith("spatial"):
-         #   results.append(h.type(x.dtype).mean(dim=(2, 3)))
-          #  print('resu', len(results), results[0].shape)
-         #   h = th.cat(results, axis=-1)
-            self.cam_feature_maps = h
-            h = self.gap(h)
-            N = h.shape[0]
-            h = h.reshape(N, -1)
-            print('h1', h.shape)
+            results.append(h.type(x.dtype).mean(dim=(2, 3)))
+            h = th.cat(results, axis=-1)
             return self.out(h)
         else:
             h = h.type(x.dtype)
-            self.cam_feature_maps = h
             return self.out(h)
