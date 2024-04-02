@@ -31,7 +31,7 @@ def main():
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
     model.to(dist_util.dev())
-    schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=1000)
+    schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=args.diffusion_steps)
 
     logger.log("creating data loader...")
 
@@ -69,6 +69,7 @@ def main():
         schedule_sampler=schedule_sampler,
         weight_decay=args.weight_decay,
         lr_anneal_steps=args.lr_anneal_steps,
+        epoch =args.epoch,
         dataset=args.dataset
     ).run_loop()
 
@@ -83,11 +84,12 @@ def create_argparser():
         batch_size=1,
         microbatch=-1,  # -1 disables microbatches
         ema_rate="0.9999",  # comma-separated list of EMA values
-        log_interval=100,
+        log_interval=50,
         save_interval=10000,
         resume_checkpoint='',
         use_fp16=False,
         fp16_scale_growth=1e-3,
+        epoch = 250,
         dataset='brats',
     )
     defaults.update(model_and_diffusion_defaults())

@@ -43,8 +43,10 @@ class TrainLoop:
         schedule_sampler=None,
         weight_decay=0.0,
         lr_anneal_steps=0,
+        epoch,
         dataset='brats',
     ):
+        self.epoch = epoch
         self.model = model
         self.diffusion = diffusion
         self.datal = data
@@ -160,11 +162,12 @@ class TrainLoop:
             self.opt.load_state_dict(state_dict)
 
     def run_loop(self):
-        i = 0
+        
 
         while (
-            not self.lr_anneal_steps
-            or self.step + self.resume_step < self.lr_anneal_steps
+            (not self.lr_anneal_steps
+            or self.step + self.resume_step < self.lr_anneal_steps)
+            and self.step < self.epoch
         ):
             if self.dataset=='brats':
                 try:
