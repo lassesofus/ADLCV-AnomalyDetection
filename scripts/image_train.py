@@ -4,6 +4,7 @@ Train a diffusion model on images.
 import sys
 import argparse
 import torch as th
+import pdb
 sys.path.append("..")
 sys.path.append(".")
 from guided_diffusion.bratsloader import BRATSDataset
@@ -53,6 +54,7 @@ def main():
         print('dataset is chexpert')
 
     logger.log("training...")
+    #pdb.set_trace()
     TrainLoop(
         model=model,
         diffusion=diffusion,
@@ -60,6 +62,7 @@ def main():
         batch_size=args.batch_size,
         microbatch=args.microbatch,
         lr=args.lr,
+        epochs=args.epochs,
         ema_rate=args.ema_rate,
         log_interval=args.log_interval,
         save_interval=args.save_interval,
@@ -83,6 +86,7 @@ def create_argparser():
         batch_size=1,
         microbatch=-1,  # -1 disables microbatches
         ema_rate="0.9999",  # comma-separated list of EMA values
+        epochs = 100,
         log_interval=100,
         save_interval=10000,
         resume_checkpoint='',

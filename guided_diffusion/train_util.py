@@ -1,6 +1,7 @@
 import copy
 import functools
 import os
+import pdb
 
 import blobfile as bf
 import torch as th
@@ -34,6 +35,7 @@ class TrainLoop:
         batch_size,
         microbatch,
         lr,
+        epochs,
         ema_rate,
         log_interval,
         save_interval,
@@ -53,6 +55,7 @@ class TrainLoop:
         self.batch_size = batch_size
         self.microbatch = microbatch if microbatch > 0 else batch_size
         self.lr = lr
+        self.epochs = epochs,
         self.ema_rate = (
             [ema_rate]
             if isinstance(ema_rate, float)
@@ -161,10 +164,11 @@ class TrainLoop:
 
     def run_loop(self):
         i = 0
-
+        #pdb.set_trace()
         while (
-            not self.lr_anneal_steps
-            or self.step + self.resume_step < self.lr_anneal_steps
+            (not self.lr_anneal_steps
+            or self.step + self.resume_step < self.lr_anneal_steps)
+            and self.step < self.epochs[0]
         ):
             if self.dataset=='brats':
                 try:

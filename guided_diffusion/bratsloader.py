@@ -4,6 +4,7 @@ import numpy as np
 import os
 import os.path
 import nibabel
+import pdb
 from scipy import ndimage
 
 class BRATSDataset(torch.utils.data.Dataset):
@@ -29,6 +30,7 @@ class BRATSDataset(torch.utils.data.Dataset):
         self.seqtypes_set = set(self.seqtypes)
         self.database = []
         for root, dirs, files in os.walk(self.directory):
+            #pdb.set_trace()
             # if there are no subdirs, we have data
             if not dirs:
                 files.sort()
@@ -45,7 +47,7 @@ class BRATSDataset(torch.utils.data.Dataset):
         out = []
         filedict = self.database[x]
         for seqtype in self.seqtypes:
-            number=filedict['t1'].split('/')[4]
+            number=filedict['t1'].split('/')[3]#[4]
             nib_img = nibabel.load(filedict[seqtype])
             out.append(torch.tensor(nib_img.get_fdata()))
         out = torch.stack(out)
@@ -54,7 +56,7 @@ class BRATSDataset(torch.utils.data.Dataset):
             path2 = './data/brats/test_labels/' + str(
                 number) + '-label.nii.gz'
 
-
+            #pdb.set_trace()
             seg=nibabel.load(path2)
             seg=seg.get_fdata()
             image = torch.zeros(4, 256, 256)

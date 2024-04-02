@@ -11,6 +11,7 @@ from .train_util import visualize
 from visdom import Visdom
 viz = Visdom(port=8850)
 from scipy import ndimage
+import pdb
 
 
 def load_data(
@@ -67,10 +68,12 @@ def load_data(
         random_crop=random_crop,
         random_flip=random_flip,
     )
+
     if deterministic:
         loader = DataLoader(
             dataset, batch_size=batch_size, shuffle=False, num_workers=1, drop_last=True
         )
+
     else:
         loader = DataLoader(
             dataset, batch_size=batch_size, shuffle=True, num_workers=1, drop_last=True

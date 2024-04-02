@@ -5,6 +5,7 @@ Train a noised image classifier on ImageNet.
 import argparse
 import os
 import sys
+import pdb
 from torch.autograd import Variable
 sys.path.append("..")
 sys.path.append(".")
@@ -19,10 +20,10 @@ from torch.nn.parallel.distributed import DistributedDataParallel as DDP
 from torch.optim import AdamW
 from visdom import Visdom
 import numpy as np
-viz = Visdom(port=8850)
-loss_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='classification loss'))
-val_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='validation loss'))
-acc_window= viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='acc', title='accuracy'))
+#viz = Visdom(port=8850)
+#loss_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='classification loss'))
+#val_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='validation loss'))
+#acc_window= viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='acc', title='accuracy'))
 
 from guided_diffusion import dist_util, logger
 from guided_diffusion.fp16_util import MixedPrecisionTrainer
@@ -40,6 +41,23 @@ from guided_diffusion.train_util import parse_resume_step_from_filename, log_los
 
 
 def main():
+    cuda_visible_devices = os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')
+    print(f"CUDA_VISIBLE_DEVICES: {cuda_visible_devices}")
+
+    if th.cuda.is_available():
+        num_devices = th.cuda.device_count()
+        print(f"Total CUDA devices available: {num_devices}")
+        for i in range(num_devices):
+            print(f"Device {i}: {th.cuda.get_device_name(i)}")
+
+        device_id = 1  # Set the device_id to 0
+        if device_id < num_devices:
+            th.cuda.set_device(device_id)  # Set the active CUDA device
+            print(f"Switched to Device {device_id}: {th.cuda.get_device_name()}")
+        else:
+            print(f"Device {device_id} is not available. Default device will be used.")
+    else:
+        print("CUDA is not available") 
     args = create_argparser().parse_args()
 
     dist_util.setup_dist()
@@ -151,9 +169,10 @@ def main():
 
             loss = loss.mean()
             if prefix=="train":
-                viz.line(X=th.ones((1, 1)).cpu() * step, Y=th.Tensor([loss]).unsqueeze(0).cpu(),
-                     win=loss_window, name='loss_cls',
-                     update='append')
+                #viz.line(X=th.ones((1, 1)).cpu() * step, Y=th.Tensor([loss]).unsqueeze(0).cpu(),
+                     #win=loss_window, name='loss_cls',
+                     #update='append')
+                pass
 
             else:
 
@@ -164,9 +183,9 @@ def main():
                 output_max.backward()
                 saliency, _ = th.max(sub_batch.grad.data.abs(), dim=1)
                 print('saliency', saliency.shape)
-                viz.heatmap(visualize(saliency[0, ...]))
-                viz.image(visualize(sub_batch[0, 0,...]))
-                viz.image(visualize(sub_batch[0, 1, ...]))
+                #viz.heatmap(visualize(saliency[0, ...]))
+                #viz.image(visualize(sub_batch[0, 0,...]))
+                #viz.image(visualize(sub_batch[0, 1, ...]))
                 th.cuda.empty_cache()
 
 

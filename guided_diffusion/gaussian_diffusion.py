@@ -21,6 +21,7 @@ from .losses import normal_kl, discretized_gaussian_log_likelihood
 from scipy import ndimage
 from torchvision import transforms
 import matplotlib.pyplot as plt
+import pdb
 def standardize(img):
     mean = th.mean(img)
     std = th.std(img)
@@ -918,10 +919,10 @@ class GaussianDiffusion:
             eta=eta,
         ):
             final = sample
-        viz.image(visualize(final["sample"].cpu()[0,0, ...]), opts=dict(caption="final 0" ))
-        viz.image(visualize(final["sample"].cpu()[0,1, ...]), opts=dict(caption="final 1" ))
-        viz.image(visualize(final["sample"].cpu()[0,2, ...]), opts=dict(caption="final 2" ))
-        viz.image(visualize(final["sample"].cpu()[0,3, ...]), opts=dict(caption="final 3" ))
+        #viz.image(visualize(final["sample"].cpu()[0,0, ...]), opts=dict(caption="final 0" ))
+        #viz.image(visualize(final["sample"].cpu()[0,1, ...]), opts=dict(caption="final 1" ))
+        #viz.image(visualize(final["sample"].cpu()[0,2, ...]), opts=dict(caption="final 2" ))
+        #viz.image(visualize(final["sample"].cpu()[0,3, ...]), opts=dict(caption="final 3" ))
 
 
         return final["sample"], x_noisy, img
@@ -985,7 +986,7 @@ class GaussianDiffusion:
                 yield out
                 img = out["sample"]
 
-        viz.image(visualize(img.cpu()[0,0, ...]), opts=dict(caption="reversesample"))
+        #viz.image(visualize(img.cpu()[0,0, ...]), opts=dict(caption="reversesample"))
         for i in indices:
                 t = th.tensor([i] * shape[0], device=device)
                 with th.no_grad():
@@ -1103,6 +1104,7 @@ class GaussianDiffusion:
                 ModelMeanType.START_X: x_start,
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
+            #pdb.set_trace()
             assert model_output.shape == target.shape == x_start.shape
             terms["mse"] = mean_flat((target - model_output) ** 2)
             if "vb" in terms:
