@@ -41,8 +41,6 @@ from guided_diffusion.train_util import parse_resume_step_from_filename, log_los
 
 
 def main():
-    cuda_visible_devices = os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')
-    print(f"CUDA_VISIBLE_DEVICES: {cuda_visible_devices}")
 
     if th.cuda.is_available():
         num_devices = th.cuda.device_count()
@@ -65,7 +63,7 @@ def main():
 
     logger.log("creating model and diffusion...")
     model, diffusion = create_classifier_and_diffusion(
-        **args_to_dict(args, classifier_and_diffusion_defaults().keys()),
+        **args_to_dict(args, classifier_and_diffusion_defaults().keys())
     )
     model.to(dist_util.dev())
     if args.noised:
