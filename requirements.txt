@@ -32,7 +32,7 @@ PyWavelets==1.2.0
 pyzmq==22.3.0
 requests==2.26.0
 scikit-image==0.18.3
-#scikit-learn==1.0.1
+scikit-learn==1.0.1
 scipy==1.7.3
 setuptools-scm==6.3.2
 #SimpleITK==2.1.1
