@@ -14,6 +14,7 @@ from guided_diffusion.bratsloader import BRATSDataset
 import torch.nn.functional as F
 import numpy as np
 import torch as th
+import pdb
 import torch.distributed as dist
 from guided_diffusion.image_datasets import load_data
 from guided_diffusion import dist_util, logger
@@ -31,6 +32,18 @@ def visualize(img):
     _max = img.max()
     normalized_img = (img - _min)/ (_max - _min)
     return normalized_img
+
+def save_image(img, filename):
+    plt.imshow(img.permute(1, 2, 0))  # Adjust this if needed based on your image channel ordering
+    plt.axis('off')  # Remove axis ticks and labels
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+    plt.close()
+
+def save_heatmap(data, filename):
+    plt.imshow(data, cmap='hot', interpolation='nearest')
+    plt.colorbar()
+    plt.savefig(filename)
+    plt.close()
 
 def main():
     args = create_argparser().parse_args()
@@ -156,6 +169,7 @@ def main():
         print('time for 1000', start.elapsed_time(end))
 
         if args.dataset=='brats':
+          pdb.set_trace()
           #viz.image(visualize(sample[0,0, ...]), opts=dict(caption="sampled output0"))
           #viz.image(visualize(sample[0,1, ...]), opts=dict(caption="sampled output1"))
           #viz.image(visualize(sample[0,2, ...]), opts=dict(caption="sampled output2"))
