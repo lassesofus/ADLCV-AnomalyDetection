@@ -39,6 +39,7 @@ class BRATSDataset(torch.utils.data.Dataset):
                 for f in files:
                     seqtype = f.split('_')[3]
                     datapoint[seqtype] = os.path.join(root, f)
+                #pdb.set_trace()
                 assert set(datapoint.keys()) == self.seqtypes_set, \
                     f'datapoint is incomplete, keys are {datapoint.keys()}'
                 self.database.append(datapoint)
@@ -81,6 +82,3 @@ class BRATSDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.database)
-
-
-

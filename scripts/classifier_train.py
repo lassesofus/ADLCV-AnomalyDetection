@@ -9,7 +9,7 @@ import pdb
 from torch.autograd import Variable
 sys.path.append("..")
 sys.path.append(".")
-from guided_diffusion.bratsloader import BRATSDataset
+from guided_diffusion.new_bratsloader import BRATSDataset
 import blobfile as bf
 import torch as th
 os.environ['OMP_NUM_THREADS'] = '8'
@@ -129,7 +129,9 @@ def main():
 
     def forward_backward_log(data_loader, step, prefix="train"):
         if args.dataset=='brats':
-            batch, extra, labels,_ , _ = next(data_loader)
+            batch, extra, labels,_ , number = next(data_loader)
+            # print(batch.shape)
+            # pdb.set_trace()
             print('IS BRATS')
 
         elif  args.dataset=='chexpert':
@@ -140,20 +142,22 @@ def main():
         print('labels', labels)
         batch = batch.to(dist_util.dev())
         labels= labels.to(dist_util.dev())
+        print(th.isnan(batch).any())
         if args.noised:
             t, _ = schedule_sampler.sample(batch.shape[0], dist_util.dev())
             batch = diffusion.q_sample(batch, t)
         else:
             t = th.zeros(batch.shape[0], dtype=th.long, device=dist_util.dev())
-
+        print(th.isnan(batch).any())
         for i, (sub_batch, sub_labels, sub_t) in enumerate(
             split_microbatches(args.microbatch, batch, labels, t)
         ):
-          
+            print(th.isnan(sub_batch).any())
             sub_batch = Variable(sub_batch, requires_grad=True)
             logits = model(sub_batch, timesteps=sub_t)
-         
+            # pdb.set_trace()
             loss = F.cross_entropy(logits, sub_labels, reduction="none")
+            # pdb.set_trace()
             losses = {}
             losses[f"{prefix}_loss"] = loss.detach()
             losses[f"{prefix}_acc@1"] = compute_top_k(
