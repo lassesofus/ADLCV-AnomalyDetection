@@ -186,7 +186,7 @@ def main():
         print('time for 1000', start.elapsed_time(end))
 
         if args.dataset=='brats':
-            pdb.set_trace()
+            #pdb.set_trace()
             # Save the sampled outputs
             save_image(visualize(sample[0, 0, ...]), 'results/plots/'+str(number)+'/sampled output 0.png')
             save_image(visualize(sample[0, 1, ...]), 'results/plots/'+str(number)+'/sampled output 1.png')
