@@ -14,6 +14,7 @@ from guided_diffusion.new_bratsloader import BRATSDataset
 import torch.nn.functional as F
 import numpy as np
 import torch as th
+import pdb
 import torch.distributed as dist
 from guided_diffusion.image_datasets import load_data
 from guided_diffusion import dist_util, logger
@@ -31,6 +32,33 @@ def visualize(img):
     _max = img.max()
     normalized_img = (img - _min)/ (_max - _min)
     return normalized_img
+
+def save_image(img, filename):
+    # Move the tensor to CPU if it's not already
+    img = img.cpu()
+
+    # Check if the image is 2D (grayscale) or 3D (color)
+    if img.dim() == 2:
+        # For a 2D image (grayscale), display it as a grayscale image
+        plt.imshow(img, cmap='gray')
+    elif img.dim() == 3:
+        # If it's a 3D tensor with 3 channels, permute to make it (H, W, C)
+        img = img.permute(1, 2, 0)
+        plt.imshow(img)
+    else:
+        raise ValueError("Unsupported image dimensions")
+
+    plt.axis('off')  # Remove axis ticks and labels
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+    plt.close()
+
+
+def save_heatmap(data, filename):
+    data = data.cpu()
+    plt.imshow(data, cmap='hot', interpolation='nearest')
+    plt.colorbar()
+    plt.savefig(filename)
+    plt.close()
 
 def main():
     args = create_argparser().parse_args()
@@ -110,21 +138,23 @@ def main():
      #   img = next(data)  # should return an image from the dataloader "data"
         print('img', img[0].shape, img[1])
         if args.dataset=='brats':
-          Labelmask = th.where(img[3] > 0, 1, 0)
-          number=img[4][0]
-          if img[2]==0:
-              continue    #take only diseased images as input
-              
-          #viz.image(visualize(img[0][0, 0, ...]), opts=dict(caption="img input 0"))
-          #viz.image(visualize(img[0][0, 1, ...]), opts=dict(caption="img input 1"))
-          #viz.image(visualize(img[0][0, 2, ...]), opts=dict(caption="img input 2"))
-          #viz.image(visualize(img[0][0, 3, ...]), opts=dict(caption="img input 3"))
-          #viz.image(visualize(img[3][0, ...]), opts=dict(caption="ground truth"))
+            Labelmask = th.where(img[3] > 0, 1, 0)
+            number=img[4][0]
+            if img[2]==0:
+                continue    #take only diseased images as input
+            # Make folder for image number for saving images
+            if not os.path.exists('results/plots/'+str(number)):
+                os.makedirs('results/plots/'+str(number))
+                save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+str(number)+'/input 0.png')
+                save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+str(number)+'/input 1.png')
+                save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+str(number)+'/input 2.png')
+                save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+str(number)+'/input 3.png')
+                save_image(visualize(img[3][0, ...]), 'results/plots/'+str(number)+'/ground truth.png')    
         else:
-          viz.image(visualize(img[0][0, ...]), opts=dict(caption="img input"))
-          print('img1', img[1])
-          number=img[1]["path"]
-          print('number', number)
+            viz.image(visualize(img[0][0, ...]), opts=dict(caption="img input"))
+            print('img1', img[1])
+            number=img[1]["path"]
+            print('number', number)
 
         if args.class_cond:
             classes = th.randint(
@@ -156,13 +186,14 @@ def main():
         print('time for 1000', start.elapsed_time(end))
 
         if args.dataset=='brats':
-          #viz.image(visualize(sample[0,0, ...]), opts=dict(caption="sampled output0"))
-          #viz.image(visualize(sample[0,1, ...]), opts=dict(caption="sampled output1"))
-          #viz.image(visualize(sample[0,2, ...]), opts=dict(caption="sampled output2"))
-          #viz.image(visualize(sample[0,3, ...]), opts=dict(caption="sampled output3"))
-          #difftot=abs(org[0, :4,...]-sample[0, ...]).sum(dim=0)
-          #viz.heatmap(visualize(difftot), opts=dict(caption="difftot"))
-          pass
+            pdb.set_trace()
+            # Save the sampled outputs
+            save_image(visualize(sample[0, 0, ...]), 'results/plots/'+str(number)+'/sampled output 0.png')
+            save_image(visualize(sample[0, 1, ...]), 'results/plots/'+str(number)+'/sampled output 1.png')
+            save_image(visualize(sample[0, 2, ...]), 'results/plots/'+str(number)+'/sampled output 2.png')
+            save_image(visualize(sample[0, 3, ...]), 'results/plots/'+str(number)+'/sampled output 3.png')
+            difftot=abs(org[0, :4,...]-sample[0, ...]).sum(dim=0)
+            save_heatmap(visualize(difftot), 'results/plots/'+str(number)+'/difftot.png')
           
         elif args.dataset=='chexpert':
           viz.image(visualize(sample[0, ...]), opts=dict(caption="sampled output"+str(name)))
