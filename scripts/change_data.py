@@ -46,7 +46,7 @@ def main(directory_from, directory_to):
 
 
 if __name__ == "__main__":
-    directory_to_data = '/zhome/af/9/203285/Desktop/ADLCV-AnomalyDetection/data/brats'
-    directory_from = os.path.join(directory_to_data, 'alltraining')
-    directory_to = os.path.join(directory_to_data, 'training')
+    directory_to_data = '/zhome/e3/3/139772/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/'
+    directory_from = os.path.join(directory_to_data, 'org_data')
+    directory_to = os.path.join(directory_to_data, 'data/brats/training')
     main(directory_from = directory_from, directory_to = directory_to)
