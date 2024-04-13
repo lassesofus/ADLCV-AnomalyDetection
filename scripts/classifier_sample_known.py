@@ -10,7 +10,7 @@ viz = Visdom(port=8850)
 import sys
 sys.path.append("..")
 sys.path.append(".")
-from guided_diffusion.bratsloader import BRATSDataset
+from guided_diffusion.new_bratsloader import BRATSDataset
 import torch.nn.functional as F
 import numpy as np
 import torch as th
@@ -186,7 +186,7 @@ def main():
         print('time for 1000', start.elapsed_time(end))
 
         if args.dataset=='brats':
-            pdb.set_trace()
+            #pdb.set_trace()
             # Save the sampled outputs
             save_image(visualize(sample[0, 0, ...]), 'results/plots/'+str(number)+'/sampled output 0.png')
             save_image(visualize(sample[0, 1, ...]), 'results/plots/'+str(number)+'/sampled output 1.png')

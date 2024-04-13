@@ -7,7 +7,7 @@ import torch as th
 import pdb
 sys.path.append("..")
 sys.path.append(".")
-from guided_diffusion.bratsloader import BRATSDataset
+from guided_diffusion.new_bratsloader import BRATSDataset
 from guided_diffusion import dist_util, logger
 from guided_diffusion.image_datasets import load_data
 from guided_diffusion.resample import create_named_schedule_sampler
