@@ -10,7 +10,7 @@ viz = Visdom(port=8850)
 import sys
 sys.path.append("..")
 sys.path.append(".")
-from guided_diffusion.bratsloader import BRATSDataset
+from guided_diffusion.new_bratsloader import BRATSDataset
 import torch.nn.functional as F
 import numpy as np
 import torch as th
