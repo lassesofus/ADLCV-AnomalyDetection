@@ -42,6 +42,9 @@ class BRATSDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         filename = self.database[idx]
         number = filename.split('/')[-1].split('_')[2]
+        slice_number = filename.split('/')[-1].split('_')[-1].split('.')[0]
+        # Combine number and slice_number to get the full name of the file
+        id = number + '_' + slice_number
         nib_img = nibabel.load(filename).get_fdata()
         index = np.array([0, 2, 3, 4])
         label = torch.tensor(nib_img[1, :, :])
@@ -53,7 +56,7 @@ class BRATSDataset(torch.utils.data.Dataset):
         else:
             weak_label=0
         out_dict = {"y" : weak_label}
-        return (image, out_dict, weak_label, label, number)
+        return (image, out_dict, weak_label, label, id)
 
     def __len__(self):
         return len(self.database)
