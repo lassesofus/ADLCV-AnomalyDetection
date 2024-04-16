@@ -274,17 +274,17 @@ def create_argparser():
         data_dir="",
         val_data_dir="",
         noised=True,
-        iterations=1000,
+        iterations=150000,
         lr=3e-4,
         weight_decay=0.0,
         anneal_lr=False,
-        batch_size=4,
+        batch_size=10,
         microbatch=-1,
         schedule_sampler="uniform",
         resume_checkpoint="",
         log_interval=1,
-        eval_interval=1000,
-        save_interval=500,
+        eval_interval=25000,
+        save_interval=50000,
         dataset='brats'
     )
     defaults.update(classifier_and_diffusion_defaults())
