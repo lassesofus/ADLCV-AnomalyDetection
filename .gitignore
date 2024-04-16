@@ -1,3 +1,7 @@
 results/
 data/
 org_data/
+*.png
+adlcv/
+*.ipynb
+*.pyc

@@ -16,6 +16,17 @@ T1CE
 T2
 """
 
+def load_file(filename):
+    nib_img = nibabel.load(filename).get_fdata()
+    index = np.array([0, 2, 3, 4])
+    label = torch.tensor(nib_img[1, :, :])
+    nib_img = torch.tensor(nib_img[index, :, :])
+    image = torch.zeros(4, 256, 256)
+    image[:,8:-8,8:-8]=nib_img #pad to a size of (256,256), doesn' contain segmentation
+    for index in range(image.size(0)):
+        image[index,:,:] = image[index,:,:]/image[index,:,:].max()
+    return image, label
+
 class BRATSDataset(torch.utils.data.Dataset):
     def __init__(self, directory, test_flag=False):
         '''
@@ -42,12 +53,7 @@ class BRATSDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         filename = self.database[idx]
         number = filename.split('/')[-1].split('_')[2]
-        nib_img = nibabel.load(filename).get_fdata()
-        index = np.array([0, 2, 3, 4])
-        label = torch.tensor(nib_img[1, :, :])
-        nib_img = torch.tensor(nib_img[index, :, :])
-        image = torch.zeros(4, 256, 256)
-        image[:,8:-8,8:-8]=nib_img		#pad to a size of (256,256), doesn' contain segmentation
+        image, label = load_file(filename)
         if label.max()>0:
             weak_label=1
         else:
