@@ -143,13 +143,13 @@ def main():
             if img[2]==0:
                 continue    #take only diseased images as input
             # Make folder for image number for saving images
-            if not os.path.exists('results/plots/'+str(number)):
-                os.makedirs('results/plots/'+str(number))
-                save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+str(number)+'/input 0.png')
-                save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+str(number)+'/input 1.png')
-                save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+str(number)+'/input 2.png')
-                save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+str(number)+'/input 3.png')
-                save_image(visualize(img[3][0, ...]), 'results/plots/'+str(number)+'/ground truth.png')    
+            if not os.path.exists('../results/plots/'+str(number)):
+                os.makedirs('../results/plots/'+str(number))
+                save_image(visualize(img[0][0, 0, ...]), '../results/plots/'+str(number)+'/input 0.png')
+                save_image(visualize(img[0][0, 1, ...]), '../results/plots/'+str(number)+'/input 1.png')
+                save_image(visualize(img[0][0, 2, ...]), '../results/plots/'+str(number)+'/input 2.png')
+                save_image(visualize(img[0][0, 3, ...]), '../results/plots/'+str(number)+'/input 3.png')
+                save_image(visualize(img[3][0, ...]), '../results/plots/'+str(number)+'/ground truth.png')    
         else:
             viz.image(visualize(img[0][0, ...]), opts=dict(caption="img input"))
             print('img1', img[1])
@@ -188,12 +188,12 @@ def main():
         if args.dataset=='brats':
             #pdb.set_trace()
             # Save the sampled outputs
-            save_image(visualize(sample[0, 0, ...]), 'results/plots/'+str(number)+'/sampled output 0.png')
-            save_image(visualize(sample[0, 1, ...]), 'results/plots/'+str(number)+'/sampled output 1.png')
-            save_image(visualize(sample[0, 2, ...]), 'results/plots/'+str(number)+'/sampled output 2.png')
-            save_image(visualize(sample[0, 3, ...]), 'results/plots/'+str(number)+'/sampled output 3.png')
+            save_image(visualize(sample[0, 0, ...]), '../results/plots/'+str(number)+'/sampled output 0.png')
+            save_image(visualize(sample[0, 1, ...]), '../results/plots/'+str(number)+'/sampled output 1.png')
+            save_image(visualize(sample[0, 2, ...]), '../results/plots/'+str(number)+'/sampled output 2.png')
+            save_image(visualize(sample[0, 3, ...]), '../results/plots/'+str(number)+'/sampled output 3.png')
             difftot=abs(org[0, :4,...]-sample[0, ...]).sum(dim=0)
-            save_heatmap(visualize(difftot), 'results/plots/'+str(number)+'/difftot.png')
+            save_heatmap(visualize(difftot), '../results/plots/'+str(number)+'/difftot.png')
           
         elif args.dataset=='chexpert':
           viz.image(visualize(sample[0, ...]), opts=dict(caption="sampled output"+str(name)))

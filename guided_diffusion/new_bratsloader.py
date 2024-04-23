@@ -59,7 +59,7 @@ class BRATSDataset(torch.utils.data.Dataset):
         else:
             weak_label=0
         out_dict = {"y" : weak_label}
-        return (image, out_dict, weak_label, label, number)
+        return (image, out_dict, weak_label, label, id)
 
     def __len__(self):
         return len(self.database)

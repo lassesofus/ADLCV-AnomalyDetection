@@ -25,6 +25,10 @@ import pdb
 # loss_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='classification loss'))
 # val_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='validation loss'))
 # acc_window= viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='acc', title='accuracy'))
+# viz = Visdom(server="http://n-62-20-9", port=8097)
+# loss_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='classification loss'))
+# val_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='validation loss'))
+# acc_window= viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='acc', title='accuracy'))
 
 
 from guided_diffusion import dist_util, logger
@@ -174,6 +178,9 @@ def main():
                 # viz.line(X=th.ones((1, 1)).cpu() * step, Y=th.Tensor([loss]).unsqueeze(0).cpu(),
                 #      win=loss_window, name='loss_cls',
                 #      update='append')
+                # viz.line(X=th.ones((1, 1)).cpu() * step, Y=th.Tensor([loss]).unsqueeze(0).cpu(),
+                #      win=loss_window, name='loss_cls',
+                #      update='append')
                 pass
 
             else:
@@ -185,6 +192,9 @@ def main():
                 output_max.backward()
                 saliency, _ = th.max(sub_batch.grad.data.abs(), dim=1)
                 print('saliency', saliency.shape)
+                # viz.heatmap(visualize(saliency[0, ...]))
+                # viz.image(visualize(sub_batch[0, 0,...]))
+                # viz.image(visualize(sub_batch[0, 1, ...]))
                 # viz.heatmap(visualize(saliency[0, ...]))
                 # viz.image(visualize(sub_batch[0, 0,...]))
                 # viz.image(visualize(sub_batch[0, 1, ...]))
@@ -272,11 +282,11 @@ def create_argparser():
         data_dir="",
         val_data_dir="",
         noised=True,
-        iterations=5000,
+        iterations=150000,
         lr=3e-4,
         weight_decay=0.0,
         anneal_lr=False,
-        batch_size=4,
+        batch_size=10,
         microbatch=-1,
         schedule_sampler="uniform",
         resume_checkpoint="",
