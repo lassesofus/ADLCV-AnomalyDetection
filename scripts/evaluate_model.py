@@ -139,7 +139,7 @@ def main():
 
     has_anomaly = lambda diff: (diff > FINAL_THRESHOLD).any()
     results = []
-    datalist = [load_file(os.path.expanduser("~/Desktop/ADLCV-AnomalyDetection/data/brats/val/BraTS20_Training_295/brats_train_295_100.nii.gz"))]
+    datalist = [load_file(os.path.expanduser("~/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/data/brats/testing/BraTS20_Training_295/brats_train_295_100.nii.gz"))]
     for img,label in datalist:#datal:
         img = th.unsqueeze(th.unsqueeze(img, dim = 0), dim = 0)
         print(img.max())
