@@ -145,7 +145,7 @@ class GaussianDiffusion:
         rescale_timesteps=False,
     ):
         self.model_mean_type = model_mean_type
-        print('self.model_meantype', self.model_mean_type)
+        # print('self.model_meantype', self.model_mean_type)
         self.model_var_type = model_var_type
         self.loss_type = loss_type
         self.rescale_timesteps = rescale_timesteps
@@ -157,7 +157,7 @@ class GaussianDiffusion:
         assert (betas > 0).all() and (betas <= 1).all()
 
         self.num_timesteps = int(betas.shape[0])
-        print('self.num_timesteps', self.num_timesteps)
+        # print('self.num_timesteps', self.num_timesteps)
 
         alphas = 1.0 - betas
         self.alphas_cumprod = np.cumprod(alphas, axis=0)
@@ -279,7 +279,7 @@ class GaussianDiffusion:
 
         B, C = x.shape[:2]
         
-        assert t.shape == (B,)
+        assert t.shape == (B,), F"{t.shape}, {B}"
         model_output = model(x, self._scale_timesteps(t), **model_kwargs)
         
         if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
@@ -374,9 +374,9 @@ class GaussianDiffusion:
 
     def _scale_timesteps(self, t):
         if self.rescale_timesteps:
-            print('tresc',t )
-            print('self.num_timesteps222', self.num_timesteps)
-            print('scaledtimsetsep', t.float() * (1000.0 / self.num_timesteps))
+            # print('tresc',t )
+            # print('self.num_timesteps222', self.num_timesteps)
+            # print('scaledtimsetsep', t.float() * (1000.0 / self.num_timesteps))
             return t.float() * (1000.0 / self.num_timesteps)
         return t
 
@@ -659,7 +659,7 @@ class GaussianDiffusion:
             img = th.randn(*shape, device=device)
       
         indices = list(range(time))[::-1]
-        print('indices', indices)
+        # print('indices', indices)
         if progress:
             # Lazy import so that we don't depend on tqdm.
             from tqdm.auto import tqdm
@@ -900,7 +900,12 @@ class GaussianDiffusion:
         
         indices = list(range(t))[::-1]
         noise = th.randn_like(img).to(device)
+        plt.imshow(img[0,0,:,:].detach().cpu())
+        plt.savefig('img.png')
         x_noisy = self.q_sample(x_start=img, t=t, noise=noise).to(device)
+        plt.imshow(x_noisy[0,0,:,:].detach().cpu())
+        plt.savefig('img_noisy.png')
+
         print('xnoisy', x_noisy.shape)
 
         final = None
@@ -955,7 +960,7 @@ class GaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         indices = list(range(time-1))[::-1]
-        print('indices', indices)
+        # print('indices', indices)
 
         if progress:
             # Lazy import so that we don't depend on tqdm.
@@ -968,7 +973,8 @@ class GaussianDiffusion:
             k=abs(time-1-i)
             if k%20==0:
                 print('k',k)
-
+                plt.imshow(img[0,0,:,:].detach().cpu())
+                plt.savefig(F'img_reverse_sample{k}.png')
             t = th.tensor([k] * shape[0], device=device)
             with th.no_grad():
 
@@ -987,21 +993,25 @@ class GaussianDiffusion:
 
         #viz.image(visualize(img.cpu()[0,0, ...]), opts=dict(caption="reversesample"))
         for i in indices:
-                t = th.tensor([i] * shape[0], device=device)
-                with th.no_grad():
-                 out = self.ddim_sample(
-                    model,
-                    img,
-                    t,
-                    clip_denoised=clip_denoised,
-                    denoised_fn=denoised_fn,
-                    cond_fn=cond_fn,
-                    model_kwargs=model_kwargs,
-                    eta=eta,
-                 )
-                yield out
-                img = out["sample"]
-                saliency=out['saliency']
+            t = th.tensor([i] * shape[0], device=device)
+            if i%20==0:
+                print('i',i)
+                plt.imshow(img[0,0,:,:].detach().cpu())
+                plt.savefig(F'img_sample{i}.png')
+            with th.no_grad():
+                out = self.ddim_sample(
+                model,
+                img,
+                t,
+                clip_denoised=clip_denoised,
+                denoised_fn=denoised_fn,
+                cond_fn=cond_fn,
+                model_kwargs=model_kwargs,
+                eta=eta,
+                )
+            yield out
+            img = out["sample"]
+            saliency=out['saliency']
 
     def _vb_terms_bpd(
         self, model, x_start, x_t, t, clip_denoised=True, model_kwargs=None
@@ -1161,7 +1171,7 @@ class GaussianDiffusion:
         vb = []
         xstart_mse = []
         mse = []
-        print('numstept',self.num_timesteps )
+        # print('numstept',self.num_timesteps )
         for t in list(range(self.num_timesteps))[::-1]:
             t_batch = th.tensor([t] * batch_size, device=device)
             noise = th.randn_like(x_start)

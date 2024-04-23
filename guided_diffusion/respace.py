@@ -26,11 +26,11 @@ def space_timesteps(num_timesteps, section_counts):
                            DDIM paper.
     :return: a set of diffusion steps from the original process to use.
     """
-    print('num_timesteps', num_timesteps)
+    # print('num_timesteps', num_timesteps)
     if isinstance(section_counts, str):
         if section_counts.startswith("ddim"):
             desired_count = int(section_counts[len("ddim") :])
-            print('desired_cound', desired_count )
+            # print('desired_cound', desired_count )
             for i in range(1, num_timesteps):
                 if len(range(0, num_timesteps, i)) == desired_count:
                     return set(range(0, num_timesteps, i))
@@ -38,7 +38,7 @@ def space_timesteps(num_timesteps, section_counts):
                 f"cannot create exactly {num_timesteps} steps with an integer stride"
             )
         section_counts = [int(x) for x in section_counts.split(",")]
-    print('sectioncount', section_counts)
+    # print('sectioncount', section_counts)
     size_per = num_timesteps // len(section_counts)
     extra = num_timesteps % len(section_counts)
     start_idx = 0
@@ -60,7 +60,7 @@ def space_timesteps(num_timesteps, section_counts):
             cur_idx += frac_stride
         all_steps += taken_steps
         start_idx += size
-    print('all steps', set(all_steps))
+    # print('all steps', set(all_steps))
     return set(all_steps)
 
 
@@ -77,8 +77,8 @@ class SpacedDiffusion(GaussianDiffusion):
         self.use_timesteps = set(use_timesteps)
         self.timestep_map = []
         self.original_num_steps = len(kwargs["betas"])
-        print('self.orig',self.original_num_steps )
-        print('use_timesteps',set(use_timesteps))
+        # print('self.orig',self.original_num_steps )
+        # print('use_timesteps',set(use_timesteps))
 
         base_diffusion = GaussianDiffusion(**kwargs)  # pylint: disable=missing-kwoa
         last_alpha_cumprod = 1.0

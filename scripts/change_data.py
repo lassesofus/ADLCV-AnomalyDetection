@@ -12,7 +12,7 @@ You have to specify starting directory of the data now
 def load_data(root, files):
     out = []
     files.sort()
-    print(files)
+    # print(files)
     for  file in files:
         out.append(nib.load(os.path.join(root, file)).get_fdata())
 
@@ -27,13 +27,15 @@ def create_files(data, path):
         nib.save(image, F"{path}/brats_train_{path[-3:]}_{number}.nii.gz")
 
 def main(directory_from, directory_to):
-    tries = 0
+    already_created = os.listdir(directory_to)
+    already_created.extend(os.listdir('/zhome/af/9/203285/Desktop/ADLCV-AnomalyDetection/data/brats/val'))
     for root, dirs, files in os.walk(directory_from):
         if not dirs:
-            tries += 1
-            data = load_data(root, files)
             dirname = root.split('/')[-1]
+            if dirname in already_created:
+                continue
             print(dirname)
+            data = load_data(root, files)
             dirname = os.path.join(directory_to, dirname)
             try:
                 os.mkdir(dirname)
@@ -46,7 +48,7 @@ def main(directory_from, directory_to):
 
 
 if __name__ == "__main__":
-    directory_to_data = '/zhome/e3/3/139772/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/'
-    directory_from = os.path.join(directory_to_data, 'org_data')
-    directory_to = os.path.join(directory_to_data, 'data/brats/training')
+    directory_to_data = '/zhome/af/9/203285/Desktop/ADLCV-AnomalyDetection/data/brats'
+    directory_from = os.path.join(directory_to_data, 'alltraining')
+    directory_to = os.path.join(directory_to_data, 'training')
     main(directory_from = directory_from, directory_to = directory_to)
