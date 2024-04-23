@@ -291,8 +291,8 @@ def create_argparser():
         schedule_sampler="uniform",
         resume_checkpoint="",
         log_interval=1,
-        eval_interval=500,
-        save_interval=500,
+        eval_interval=50000,
+        save_interval=50000,
         dataset='brats'
     )
     defaults.update(classifier_and_diffusion_defaults())

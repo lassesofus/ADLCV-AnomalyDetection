@@ -973,8 +973,8 @@ class GaussianDiffusion:
             k=abs(time-1-i)
             if k%20==0:
                 print('k',k)
-                plt.imshow(img[0,0,:,:].detach().cpu())
-                plt.savefig(F'img_reverse_sample{k}.png')
+                #plt.imshow(img[0,0,:,:].detach().cpu())
+                #plt.savefig(F'img_reverse_sample{k}.png')
             t = th.tensor([k] * shape[0], device=device)
             with th.no_grad():
 

@@ -23,8 +23,12 @@ def load_file(filename):
     nib_img = torch.tensor(nib_img[index, :, :])
     image = torch.zeros(4, 256, 256)
     image[:,8:-8,8:-8]=nib_img #pad to a size of (256,256), doesn' contain segmentation
-    for index in range(image.size(0)):
-        image[index,:,:] = image[index,:,:]/image[index,:,:].max()
+    #pdb.set_trace()
+    if (image != 0).any(): # Check if the image is empty - if so normalization will give NaN.
+        for index in range(image.size(0)):
+            if image[index,:,:].max() != 0:
+                image[index,:,:] = image[index,:,:]/image[index,:,:].max()
+    #pdb.set_trace()
     return image, label
 
 class BRATSDataset(torch.utils.data.Dataset):
@@ -59,7 +63,7 @@ class BRATSDataset(torch.utils.data.Dataset):
         else:
             weak_label=0
         out_dict = {"y" : weak_label}
-        return (image, out_dict, weak_label, label, id)
+        return (image, out_dict, weak_label, label, number)
 
     def __len__(self):
         return len(self.database)
