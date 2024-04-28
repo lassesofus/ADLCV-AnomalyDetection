@@ -29,38 +29,38 @@ from guided_diffusion.script_util import (
 )
 
 FINAL_THRESHOLD = 0.5
-# def visualize(img):
-#     _min = img.min()
-#     _max = img.max()
-#     normalized_img = (img - _min)/ (_max - _min)
-#     return normalized_img
+def visualize(img):
+    _min = img.min()
+    _max = img.max()
+    normalized_img = (img - _min)/ (_max - _min)
+    return normalized_img
 
-# def save_image(img, filename):
-#     # Move the tensor to CPU if it's not already
-#     img = img.cpu()
+def save_image(img, filename):
+    # Move the tensor to CPU if it's not already
+    img = img.cpu()
 
-#     # Check if the image is 2D (grayscale) or 3D (color)
-#     if img.dim() == 2:
-#         # For a 2D image (grayscale), display it as a grayscale image
-#         plt.imshow(img, cmap='gray')
-#     elif img.dim() == 3:
-#         # If it's a 3D tensor with 3 channels, permute to make it (H, W, C)
-#         img = img.permute(1, 2, 0)
-#         plt.imshow(img)
-#     else:
-#         raise ValueError("Unsupported image dimensions")
+    # Check if the image is 2D (grayscale) or 3D (color)
+    if img.dim() == 2:
+        # For a 2D image (grayscale), display it as a grayscale image
+        plt.imshow(img, cmap='gray')
+    elif img.dim() == 3:
+        # If it's a 3D tensor with 3 channels, permute to make it (H, W, C)
+        img = img.permute(1, 2, 0)
+        plt.imshow(img)
+    else:
+        raise ValueError("Unsupported image dimensions")
 
-#     plt.axis('off')  # Remove axis ticks and labels
-#     plt.savefig(filename, bbox_inches='tight', pad_inches=0)
-#     plt.close()
+    plt.axis('off')  # Remove axis ticks and labels
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+    plt.close()
 
 
-# def save_heatmap(data, filename):
-#     data = data.cpu()
-#     plt.imshow(data, cmap='hot', interpolation='nearest')
-#     plt.colorbar()
-#     plt.savefig(filename)
-#     plt.close()
+def save_heatmap(data, filename):
+    data = data.cpu()
+    plt.imshow(data, cmap='hot', interpolation='nearest')
+    plt.colorbar()
+    plt.savefig(filename)
+    plt.close()
 
 def main():
     args = create_argparser().parse_args()
@@ -139,28 +139,30 @@ def main():
 
     has_anomaly = lambda diff: (diff > FINAL_THRESHOLD).any()
     results = []
-    datalist = [load_file(os.path.expanduser("~/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/data/brats/testing/BraTS20_Training_295/brats_train_295_100.nii.gz"))]
-    for img,label in datalist:#datal:
+    patient_ID = "295"
+    datalist = [load_file(os.path.expanduser(f"~/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/data/brats/testing/BraTS20_Training_{patient_ID}/brats_train_{patient_ID}_100.nii.gz"))]
+    for img, label in datalist:#datal:
         img = th.unsqueeze(th.unsqueeze(img, dim = 0), dim = 0)
         print(img.max())
         # print(img)
         # label = img[2]
         model_kwargs = {}
-     #   img = next(data)  # should return an image from the dataloader "data"
-        # print('img', img[0].shape, img[1])
-        # if args.dataset=='brats':
-        #     Labelmask = th.where(img[3] > 0, 1, 0)
-        #     number=img[4][0]
-        #     if img[2]==0:
-        #         continue    #take only diseased images as input
+        #img = next(data)  # should return an image from the dataloader "data"
+        #pdb.set_trace()
+        #print('img', img[0].shape, img[1])
+        if args.dataset=='brats':
+            #Labelmask = th.where(img[3] > 0, 1, 0)
+            #number=img[4][0]
+            #if img[2]==0:
+            #    continue    #take only diseased images as input
             # Make folder for image number for saving images
-            # if not os.path.exists('results/plots/'+str(number)):
-                # os.makedirs('results/plots/'+str(number))
-                # save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+str(number)+'/input 0.png')
-                # save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+str(number)+'/input 1.png')
-                # save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+str(number)+'/input 2.png')
-                # save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+str(number)+'/input 3.png')
-                # save_image(visualize(img[3][0, ...]), 'results/plots/'+str(number)+'/ground truth.png')    
+            if not os.path.exists('results/plots/'+patient_ID):
+                os.makedirs('results/plots/'+patient_ID)
+                save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+patient_ID+'/input 0.png')
+                save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+patient_ID+'/input 1.png')
+                save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+patient_ID+'/input 2.png')
+                save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+patient_ID+'/input 3.png')
+                save_image(visualize(label), 'results/plots/'+patient_ID+'/ground truth.png')    
         # else:
         #     viz.image(visualize(img[0][0, ...]), opts=dict(caption="img input"))
         #     print('img1', img[1])
@@ -200,15 +202,20 @@ def main():
         if args.dataset=='brats':
             # pdb.set_trace()
             # # Save the sampled outputs
-            # save_image(visualize(sample[0, 0, ...]), 'results/plots/'+str(number)+'/sampled output 0.png')
-            # save_image(visualize(sample[0, 1, ...]), 'results/plots/'+str(number)+'/sampled output 1.png')
-            # save_image(visualize(sample[0, 2, ...]), 'results/plots/'+str(number)+'/sampled output 2.png')
-            # save_image(visualize(sample[0, 3, ...]), 'results/plots/'+str(number)+'/sampled output 3.png')
+            save_image(visualize(sample[0, 0, ...]), 'results/plots/'+patient_ID+'/sampled output 0.png')
+            save_image(visualize(sample[0, 1, ...]), 'results/plots/'+patient_ID+'/sampled output 1.png')
+            save_image(visualize(sample[0, 2, ...]), 'results/plots/'+patient_ID+'/sampled output 2.png')
+            save_image(visualize(sample[0, 3, ...]), 'results/plots/'+patient_ID+'/sampled output 3.png')
             difftot=abs(org[0, :4,...]-sample[0, ...]).sum(dim=0)
-            results.append(int(has_anomaly(difftot) == bool(label)))
-            print(results[-1])
+            #results.append(int(has_anomaly(difftot) == bool(label)))
+            #print(results[-1])
+            difftot_norm = difftot/difftot.max()
+            Amap = difftot_norm > 0.5
+            #pdb.set_trace()
+            save_image(Amap, 'results/plots/'+patient_ID+'/Amap.png')
+            save_heatmap(visualize(difftot), 'results/plots/'+patient_ID+'/difftot.png')
         break
-            # save_heatmap(visualize(difftot), 'results/plots/'+str(number)+'/difftot.png')
+            # 
           
         # elif args.dataset=='chexpert':
         #   viz.image(visualize(sample[0, ...]), opts=dict(caption="sampled output"+str(name)))
@@ -237,8 +244,8 @@ def main():
 
     # dist.barrier()
     # logger.log("sampling complete")
-    print("Evaluation complete")
-    print(F"Accuracy: {sum(results)/len(results)}")
+    #print("Evaluation complete")
+    #print(F"Accuracy: {sum(results)/len(results)}")
 
 
 def create_argparser():
@@ -251,7 +258,7 @@ def create_argparser():
         model_path="",
         classifier_path="",
         classifier_scale=100,
-        noise_level=500,
+        noise_level=250,
         dataset='brats'
     )
     defaults.update(model_and_diffusion_defaults())

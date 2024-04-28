@@ -5,3 +5,5 @@ org_data/
 adlcv/
 *.ipynb
 *.pyc
+run_classifier.sh
+run_diffusion.sh

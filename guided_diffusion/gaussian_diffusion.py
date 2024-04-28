@@ -22,6 +22,32 @@ from scipy import ndimage
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import pdb
+
+def visualize(img):
+    _min = img.min()
+    _max = img.max()
+    normalized_img = (img - _min)/ (_max - _min)
+    return normalized_img
+
+def save_image(img, filename):
+    # Move the tensor to CPU if it's not already
+    img = img.cpu()
+
+    # Check if the image is 2D (grayscale) or 3D (color)
+    if img.dim() == 2:
+        # For a 2D image (grayscale), display it as a grayscale image
+        plt.imshow(img, cmap='gray')
+    elif img.dim() == 3:
+        # If it's a 3D tensor with 3 channels, permute to make it (H, W, C)
+        img = img.permute(1, 2, 0)
+        plt.imshow(img)
+    else:
+        raise ValueError("Unsupported image dimensions")
+
+    plt.axis('off')  # Remove axis ticks and labels
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+    plt.close()
+
 def standardize(img):
     mean = th.mean(img)
     std = th.std(img)
@@ -562,10 +588,10 @@ class GaussianDiffusion:
         img=img[0].to(device)
         indices = list(range(t))[::-1]
         noise = th.randn_like(img[:, :4, ...]).to(device)
-        x_noisy = self.q_sample(x_start=img[:, :4, ...], t=t, noise=noise).to(device)
+        x_noisy = self.q_sample(x_start=img[:, :4, ...], t=torch.tensor(noise_level, device=device), noise=noise).to(device)
         x_noisy = torch.cat((x_noisy, img[:, 4:, ...]), dim=1)
         
-        
+        #pdb.set_trace()
         for sample in self.p_sample_loop_progressive(
             model,
             shape,
@@ -665,8 +691,8 @@ class GaussianDiffusion:
             from tqdm.auto import tqdm
 
             indices = tqdm(indices)
-        
-          
+
+         
         for i in indices:
                 t = th.tensor([i] * shape[0], device=device)
 
@@ -685,13 +711,20 @@ class GaussianDiffusion:
                     yield out
                     img = out["sample"]
 
-                    if i%100==0:
-                     print('i', i)
-                     viz.image(visualize(img[0,0,...]), opts=dict(caption=str(i)))
-                     viz.image(visualize(img[0, 1,...]), opts=dict(caption=str(i)))
-                     viz.image(visualize(img[0, 2,...]), opts=dict(caption=str(i)))
-                     viz.image(visualize(img[0, 3,...]), opts=dict(caption=str(i)))
-                     viz.image(visualize(out["saliency"][0,0,...]), opts=dict(caption='saliency'))
+                    if i%100==0 or i==time-1:
+                        print('i', i)
+                        #pdb.set_trace()
+                        save_image(visualize(img[0, 0, ...]), f'results/plots/denoising_step{i}.png')
+                        save_image(visualize(img[0, 1, ...]), f'results/plots/denoising_step{i}.png')
+                        save_image(visualize(img[0, 2, ...]), f'results/plots/denoising_step{i}.png')
+                        save_image(visualize(img[0, 3, ...]), f'results/plots/denoising_step{i}.png')
+                    #  viz.image(visualize(img[0,0,...]), opts=dict(caption=str(i)))
+                    #  viz.image(visualize(img[0, 1,...]), opts=dict(caption=str(i)))
+                    #  viz.image(visualize(img[0, 2,...]), opts=dict(caption=str(i)))
+                    #  viz.image(visualize(img[0, 3,...]), opts=dict(caption=str(i)))
+                    #  viz.image(visualize(out["saliency"][0,0,...]), opts=dict(caption='saliency'))
+
+  
               
 
     def ddim_sample(
@@ -996,8 +1029,8 @@ class GaussianDiffusion:
             t = th.tensor([i] * shape[0], device=device)
             if i%20==0:
                 print('i',i)
-                plt.imshow(img[0,0,:,:].detach().cpu())
-                plt.savefig(F'img_sample{i}.png')
+                #plt.imshow(img[0,0,:,:].detach().cpu())
+                #plt.savefig(F'img_sample{i}.png')
             with th.no_grad():
                 out = self.ddim_sample(
                 model,
