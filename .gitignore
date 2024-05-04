@@ -3,7 +3,6 @@ data/
 org_data/
 *.png
 adlcv/
-*.ipynb
 *.pyc
 run_classifier.sh
 run_diffusion.sh
