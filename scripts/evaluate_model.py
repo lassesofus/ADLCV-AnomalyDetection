@@ -58,8 +58,8 @@ def save_image(img, filename):
 def save_heatmap(data, filename):
     data = data.cpu()
     plt.imshow(data, cmap='hot', interpolation='nearest')
-    plt.colorbar()
-    plt.savefig(filename)
+    plt.axis('off')  # Turn off the axis
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
     plt.close()
 
 def main():
@@ -140,7 +140,7 @@ def main():
     has_anomaly = lambda diff: (diff > FINAL_THRESHOLD).any()
     results = []
     patient_ID = "295"
-    datalist = [load_file(os.path.expanduser(f"~/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/data/brats/testing/BraTS20_Training_{patient_ID}/brats_train_{patient_ID}_100.nii.gz"))]
+    datalist = [load_file(os.path.expanduser(f"~/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/data/brats/testing/BraTS20_Training_{patient_ID}/brats_train_{patient_ID}_120.nii.gz"))]
     for img, label in datalist:#datal:
         img = th.unsqueeze(th.unsqueeze(img, dim = 0), dim = 0)
         print(img.max())
@@ -149,7 +149,7 @@ def main():
         model_kwargs = {}
         #img = next(data)  # should return an image from the dataloader "data"
         #pdb.set_trace()
-        #print('img', img[0].shape, img[1])
+        #print('img', img[0].shape, img[1]) 
         if args.dataset=='brats':
             #Labelmask = th.where(img[3] > 0, 1, 0)
             #number=img[4][0]
@@ -158,11 +158,11 @@ def main():
             # Make folder for image number for saving images
             if not os.path.exists('results/plots/'+patient_ID):
                 os.makedirs('results/plots/'+patient_ID)
-                save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+patient_ID+'/input 0.png')
-                save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+patient_ID+'/input 1.png')
-                save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+patient_ID+'/input 2.png')
-                save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+patient_ID+'/input 3.png')
-                save_image(visualize(label), 'results/plots/'+patient_ID+'/ground truth.png')    
+            save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+patient_ID+'/input 0.png')
+            save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+patient_ID+'/input 1.png')
+            save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+patient_ID+'/input 2.png')
+            save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+patient_ID+'/input 3.png')
+            save_image(visualize(label), 'results/plots/'+patient_ID+'/ground truth.png')    
         # else:
         #     viz.image(visualize(img[0][0, ...]), opts=dict(caption="img input"))
         #     print('img1', img[1])

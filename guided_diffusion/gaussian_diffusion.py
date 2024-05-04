@@ -993,6 +993,7 @@ class GaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         indices = list(range(time-1))[::-1]
+        pdb.set_trace()
         # print('indices', indices)
 
         if progress:
