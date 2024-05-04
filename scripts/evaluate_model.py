@@ -2,6 +2,7 @@
 Generate a large batch of image samples from a model and save them as a large
 numpy array. This can be used to produce samples for FID evaluation.
 """
+   
 import matplotlib.pyplot as plt
 import argparse
 import os
@@ -53,6 +54,32 @@ def save_image(img, filename):
     plt.axis('off')  # Remove axis ticks and labels
     plt.savefig(filename, bbox_inches='tight', pad_inches=0)
     plt.close()
+
+from skimage.filters import threshold_otsu
+#make Otsu thresholding
+def otsu_thresholding(image):
+    #needs to be converted to gray scale in order to work
+    thresh = threshold_otsu(image)
+    binary = image > thresh
+    return binary
+
+
+
+def dice_score(output, ground_truth):
+
+    intersection = np.logical_and(output, ground_truth)
+    return 2. * intersection.sum() / (output.sum() + ground_truth.sum())
+
+def iou_score(output, ground_truth):
+    
+        intersection = np.logical_and(output, ground_truth)
+        union = np.logical_or(output, ground_truth)
+        return intersection.sum() / union.sum()
+
+def auroc_score(output, ground_truth):
+    #read about how this works
+    from sklearn.metrics import roc_auc_score
+    return roc_auc_score(ground_truth, output)
 
 
 def save_heatmap(data, filename):
