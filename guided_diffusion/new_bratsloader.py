@@ -31,7 +31,7 @@ def load_file(filename):
             if image[index,:,:].max() != 0:
                 image[index,:,:] = image[index,:,:]/image[index,:,:].max()
     #pdb.set_trace()
-    return image, label_padded
+    return image.cuda(), label_padded.cuda()
 
 class BRATSDataset(torch.utils.data.Dataset):
     def __init__(self, directory, test_flag=False):
@@ -58,14 +58,14 @@ class BRATSDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         filename = self.database[idx]
-        number = filename.split('/')[-1].split('_')[2]
+        number = filename.split('/')[-1].split('_')[2:]
         image, label = load_file(filename)
         if label.max()>0:
             weak_label=1
         else:
             weak_label=0
         out_dict = {"y" : weak_label}
-        return (image, out_dict, weak_label, label, number)
+        return (image, out_dict, torch.tensor(weak_label).cuda(), label, number)
 
     def __len__(self):
         return len(self.database)

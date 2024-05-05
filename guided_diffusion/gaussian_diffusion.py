@@ -11,8 +11,8 @@ import torch.nn.functional as F
 from torchvision.utils import save_image
 import torch
 import math
-from visdom import Visdom
-viz = Visdom(port=8850)
+# from visdom import Visdom
+# viz = Visdom(port=8850)
 import numpy as np
 import torch as th
 from .train_util import visualize
@@ -307,7 +307,6 @@ class GaussianDiffusion:
         
         assert t.shape == (B,), F"{t.shape}, {B}"
         model_output = model(x, self._scale_timesteps(t), **model_kwargs)
-        
         if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
             assert model_output.shape == (B, C * 2, *x.shape[2:])
             model_output, model_var_values = th.split(model_output, C, dim=1)
@@ -376,7 +375,7 @@ class GaussianDiffusion:
   
     def _predict_xstart_from_eps(self, x_t, t, eps):
         x_t = x_t[:, :4, ...]
-        assert x_t.shape == eps.shape
+        assert x_t.shape == eps.shape, F"{x_t.shape}, {eps.shape}"
         return (
             _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
             - _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * eps
@@ -636,7 +635,7 @@ class GaussianDiffusion:
         x_noisy1 = self.q_sample(x_start=img1, t=t, noise=noise).to(device)
         x_noisy2 = self.q_sample(x_start=img2, t=t, noise=noise).to(device)
         interpol=lambdaint*x_noisy1+(1-lambdaint)*x_noisy2
-        print('interpol', interpol.shape)
+        # print('interpol', interpol.shape)
         for sample in self.p_sample_loop_progressive(
             model,
             shape,
@@ -714,10 +713,10 @@ class GaussianDiffusion:
                     if i%100==0 or i==time-1:
                         print('i', i)
                         #pdb.set_trace()
-                        save_image(visualize(img[0, 0, ...]), f'results/plots/denoising_step{i}.png')
-                        save_image(visualize(img[0, 1, ...]), f'results/plots/denoising_step{i}.png')
-                        save_image(visualize(img[0, 2, ...]), f'results/plots/denoising_step{i}.png')
-                        save_image(visualize(img[0, 3, ...]), f'results/plots/denoising_step{i}.png')
+                        # save_image(visualize(img[0, 0, ...]), f'results/plots/denoising_step{i}.png')
+                        # save_image(visualize(img[0, 1, ...]), f'results/plots/denoising_step{i}.png')
+                        # save_image(visualize(img[0, 2, ...]), f'results/plots/denoising_step{i}.png')
+                        # save_image(visualize(img[0, 3, ...]), f'results/plots/denoising_step{i}.png')
                     #  viz.image(visualize(img[0,0,...]), opts=dict(caption=str(i)))
                     #  viz.image(visualize(img[0, 1,...]), opts=dict(caption=str(i)))
                     #  viz.image(visualize(img[0, 2,...]), opts=dict(caption=str(i)))
@@ -844,7 +843,7 @@ class GaussianDiffusion:
         x_noisy1 = self.q_sample(x_start=img1, t=t, noise=noise).to(device)
         x_noisy2 = self.q_sample(x_start=img2, t=t, noise=noise).to(device)
         interpol=lambdaint*x_noisy1+(1-lambdaint)*x_noisy2
-        print('interpol', interpol.shape)
+        # print('interpol', interpol.shape)
         for sample in self.ddim_sample_loop_progressive(
             model,
             shape,
@@ -899,7 +898,7 @@ class GaussianDiffusion:
         ):
 
             final = sample
-        viz.image(visualize(final["sample"].cpu()[0, ...]), opts=dict(caption="sample"+ str(10) ))
+        # viz.image(visualize(final["sample"].cpu()[0, ...]), opts=dict(caption="sample"+ str(10) ))
         return final["sample"]
 
 
@@ -933,13 +932,13 @@ class GaussianDiffusion:
         
         indices = list(range(t))[::-1]
         noise = th.randn_like(img).to(device)
-        plt.imshow(img[0,0,:,:].detach().cpu())
-        plt.savefig('img.png')
+        # plt.imshow(img[0,0,:,:].detach().cpu())
+        # plt.savefig('img.png')
         x_noisy = self.q_sample(x_start=img, t=t, noise=noise).to(device)
-        plt.imshow(x_noisy[0,0,:,:].detach().cpu())
-        plt.savefig('img_noisy.png')
+        # plt.imshow(x_noisy[0,0,:,:].detach().cpu())
+        # plt.savefig('img_noisy.png')
 
-        print('xnoisy', x_noisy.shape)
+        # print('xnoisy', x_noisy.shape)
 
         final = None
         for sample in self.ddim_sample_loop_progressive(
@@ -1005,7 +1004,7 @@ class GaussianDiffusion:
         for i in indices:
 
             k=abs(time-1-i)
-            if k%20==0:
+            if k%100==0:
                 print('k',k)
                 #plt.imshow(img[0,0,:,:].detach().cpu())
                 #plt.savefig(F'img_reverse_sample{k}.png')
@@ -1028,7 +1027,7 @@ class GaussianDiffusion:
         #viz.image(visualize(img.cpu()[0,0, ...]), opts=dict(caption="reversesample"))
         for i in indices:
             t = th.tensor([i] * shape[0], device=device)
-            if i%20==0:
+            if i%100==0:
                 print('i',i)
                 #plt.imshow(img[0,0,:,:].detach().cpu())
                 #plt.savefig(F'img_sample{i}.png')
@@ -1210,7 +1209,7 @@ class GaussianDiffusion:
             t_batch = th.tensor([t] * batch_size, device=device)
             noise = th.randn_like(x_start)
             x_t = self.q_sample(x_start=x_start, t=t_batch, noise=noise)
-            viz.image(visualize(x_t[0, ...]), opts=dict(caption="xt"))
+            # viz.image(visualize(x_t[0, ...]), opts=dict(caption="xt"))
 
             # Calculate VLB term at the current timestep
             with th.no_grad():
