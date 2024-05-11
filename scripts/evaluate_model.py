@@ -8,6 +8,7 @@ import argparse
 import os
 # from visdom import Visdom
 # viz = Visdom(port=8850)
+from skimage.filters import threshold_otsu
 import sys
 sys.path.append("..")
 sys.path.append(".")
@@ -28,12 +29,15 @@ from guided_diffusion.script_util import (
     add_dict_to_argparser,
     args_to_dict,
 )
+L = [100, 250, 500, 750, 999]
 
-FINAL_THRESHOLD = 0.5
 def visualize(img):
     _min = img.min()
     _max = img.max()
-    normalized_img = (img - _min)/ (_max - _min)
+    if _max > 0:
+        normalized_img = (img - _min)/ (_max - _min)
+    else:
+        normalized_img = img
     return normalized_img
 
 def save_image(img, filename):
@@ -55,35 +59,70 @@ def save_image(img, filename):
     plt.savefig(filename, bbox_inches='tight', pad_inches=0)
     plt.close()
 
-from skimage.filters import threshold_otsu
 #make Otsu thresholding
-def otsu_thresholding(image):
-    #needs to be converted to gray scale in order to work
-    thresh = threshold_otsu(image)
-    binary = image > thresh
-    return binary
-
-
+def get_otsu_threshold(images:np.ndarray):
+    images = images.flatten()
+    hist, edges = np.histogram(images, bins = 256)
+    # hist = hist[1:]
+    # hist = hist/np.sum(hist)
+    # print(hist)
+    # sigma_t = lambda t: np.var(hist[:t])*np.sum(hist[:t]) + np.var(hist[t:])*np.sum(hist[t:])
+    # threshold = edges[np.argmin(np.array([sigma_t(t) for t in range(1, 255)])) + 1]
+    threshold = threshold_otsu(hist = (hist[1:], edges[2:]))
+    return threshold
 
 def dice_score(output, ground_truth):
-
     intersection = np.logical_and(output, ground_truth)
+    # print(F"DICE insides\nIntersection: {intersection.sum()}\nUnion: {output.sum() + ground_truth.sum()}\nOuput: {output.sum()}\nGT: {ground_truth.sum()}")
+    # print(output.shape)
+    # print(ground_truth.shape)
+    # print(intersection.shape)
+    # print(union.shape)
     return 2. * intersection.sum() / (output.sum() + ground_truth.sum())
 
 def iou_score(output, ground_truth):
-    
-        intersection = np.logical_and(output, ground_truth)
-        union = np.logical_or(output, ground_truth)
-        return intersection.sum() / union.sum()
+    intersection = np.logical_and(output, ground_truth)
+    union = np.logical_or(output, ground_truth)
+    # print(union.shape, union.max(), union.min)
+    # print(F"IOU insides\nIntersection: {intersection.sum()}\nUnion: {union.sum()}\nOuput: {output.sum()}\nGT: {ground_truth.sum()}")
+    # print(output.shape)
+    # print(ground_truth.shape)
+    # print(intersection.shape)
+    # print(union.shape)
+    return intersection.sum() / union.sum()
 
-def auroc_score(output, ground_truth):
-    #read about how this works
-    from sklearn.metrics import roc_auc_score
-    return roc_auc_score(ground_truth, output)
+def accuracy(d:dict):
+    denominator = sum(d.values())
+    return (d["TP"] + d["TN"])/denominator if denominator > 0 else 0
+    
+def sensitivity(d:dict):
+    denominator = d["TP"] + d["FN"]
+    return d["TP"]/denominator if denominator > 0 else 0
+
+def specificity(d:dict):
+    denominator = d["TN"] + d["FP"]
+    return d["TN"]/denominator if denominator > 0 else 0
+
+def calculate_dict(seg_maps_pred, labels):
+    d = {"TP":0, "TN":0, "FP":0, "FN":0}
+    for i in range(len(labels)):
+        label_pred = seg_maps_pred[i,:,:].any()
+        key = F"{'T' if label_pred == labels[i] else 'F'}{'P' if label_pred else 'N'}"
+        d[key] += 1
+    return d
+
+
+# def auroc_score(output, ground_truth):
+#     #read about how this works
+#     from sklearn.metrics import roc_auc_score
+#     return roc_auc_score(ground_truth, output)
 
 
 def save_heatmap(data, filename):
-    data = data.cpu()
+    try:
+        data = data.cpu()
+    except AttributeError:
+        pass
     plt.imshow(data, cmap='hot', interpolation='nearest')
     plt.axis('off')  # Turn off the axis
     plt.savefig(filename, bbox_inches='tight', pad_inches=0)
@@ -93,27 +132,18 @@ def main():
     args = create_argparser().parse_args()
 
     dist_util.setup_dist()
-    # logger.configure()
+    logger.configure()
 
     print("creating model and diffusion...")
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
-    if args.dataset=='brats':
-      ds = BRATSDataset(args.data_dir, test_flag=True)
-      datal = th.utils.data.DataLoader(
-        ds,
-        batch_size=args.batch_size,
-        shuffle=False)
-    
-    elif args.dataset=='chexpert':
-     data = load_data(
-         data_dir=args.data_dir,
-         batch_size=args.batch_size,
-         image_size=args.image_size,
-         class_cond=True,
-     )
-     datal = iter(data)
+
+    ds = BRATSDataset(args.data_dir, eval_slices=["120"])
+    datal = th.utils.data.DataLoader(
+    ds,
+    batch_size=args.batch_size,
+    shuffle=False)
    
     model.load_state_dict(
         dist_util.load_state_dict(args.model_path, map_location= th.device("cuda" if th.cuda.is_available() else 'cpu'))
@@ -164,115 +194,116 @@ def main():
     # all_labels = []
 
 
-    has_anomaly = lambda diff: (diff > FINAL_THRESHOLD).any()
-    results = []
-    patient_ID = "295"
-    datalist = [load_file(os.path.expanduser(f"~/Desktop/ADLCV/Project/ADLCV-AnomalyDetection/data/brats/testing/BraTS20_Training_{patient_ID}/brats_train_{patient_ID}_120.nii.gz"))]
-    for img, label in datalist:#datal:
-        img = th.unsqueeze(th.unsqueeze(img, dim = 0), dim = 0)
-        print(img.max())
-        # print(img)
-        # label = img[2]
-        model_kwargs = {}
+    # has_anomaly = lambda diff: (diff > FINAL_THRESHOLD).any()
+    # results = []
+    # patient_ID = "295"
+    # datalist = [load_file(os.path.expanduser(f"~/Desktop/ADLCV-AnomalyDetection/data/brats/val/BraTS20_Training_{patient_ID}/brats_train_{patient_ID}_120.nii.gz"))]
+    # for img, _, label, seg_map, number in datal:
+    #     model_kwargs = {}
         #img = next(data)  # should return an image from the dataloader "data"
         #pdb.set_trace()
         #print('img', img[0].shape, img[1]) 
-        if args.dataset=='brats':
-            #Labelmask = th.where(img[3] > 0, 1, 0)
-            #number=img[4][0]
-            #if img[2]==0:
-            #    continue    #take only diseased images as input
-            # Make folder for image number for saving images
-            if not os.path.exists('results/plots/'+patient_ID):
-                os.makedirs('results/plots/'+patient_ID)
-            save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+patient_ID+'/input 0.png')
-            save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+patient_ID+'/input 1.png')
-            save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+patient_ID+'/input 2.png')
-            save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+patient_ID+'/input 3.png')
-            save_image(visualize(label), 'results/plots/'+patient_ID+'/ground truth.png')    
+        # if args.dataset=='brats':
+        #     #Labelmask = th.where(img[3] > 0, 1, 0)
+        #     #number=img[4][0]
+        #     #if img[2]==0:
+        #     #    continue    #take only diseased images as input
+        #     # Make folder for image number for saving images
+        #     if not os.path.exists('results/plots/'+patient_ID):
+        #         os.makedirs('results/plots/'+patient_ID)
+        #     save_image(visualize(img[0][0, 0, ...]), 'results/plots/'+patient_ID+'/input 0.png')
+        #     save_image(visualize(img[0][0, 1, ...]), 'results/plots/'+patient_ID+'/input 1.png')
+        #     save_image(visualize(img[0][0, 2, ...]), 'results/plots/'+patient_ID+'/input 2.png')
+        #     save_image(visualize(img[0][0, 3, ...]), 'results/plots/'+patient_ID+'/input 3.png')
+        #     save_image(visualize(label), 'results/plots/'+patient_ID+'/ground truth.png')    
         # else:
         #     viz.image(visualize(img[0][0, ...]), opts=dict(caption="img input"))
         #     print('img1', img[1])
         #     number=img[1]["path"]
         #     print('number', number)
+    model_kwargs = {}
+    # if args.class_cond:
+    #     classes = th.randint(
+    #         low=0, high=1, size=(args.batch_size,), device=dist_util.dev()
+    #     )
+    #     model_kwargs["y"] = classes
+    #     print('y', model_kwargs["y"])
 
-        if args.class_cond:
-            classes = th.randint(
-                low=0, high=1, size=(args.batch_size,), device=dist_util.dev()
-            )
-            model_kwargs["y"] = classes
-            print('y', model_kwargs["y"])
+    sample_fn = (
+        diffusion.p_sample_loop_known if not args.use_ddim else diffusion.ddim_sample_loop_known
+    )
 
-        sample_fn = (
-            diffusion.p_sample_loop_known if not args.use_ddim else diffusion.ddim_sample_loop_known
-        )
-        # print('samplefn', sample_fn)
-        # start = th.cuda.Event(enable_timing=True)
-        # end = th.cuda.Event(enable_timing=True)
-        # start.record()
-        sample, x_noisy, org = sample_fn(
+    for l in L:
+        logger.log("_____________________")
+        logger.log(l)
+        outputs = []
+        labels = []
+        seg_maps = []
+        i = 0
+        for img, _, label, seg_map, number in datal:
+            img = th.unsqueeze(img, 0)
+            # model_kwargs = {"y" :th.tensor([0,], device = dist_util.dev())}
+            if args.class_cond:
+                classes = th.randint(
+                    low=0, high=1, size=(args.batch_size,), device=dist_util.dev()
+                )
+                model_kwargs["y"] = classes
+            sample, x_noisy, org = sample_fn(
             model_fn,
             (args.batch_size, 4, args.image_size, args.image_size), img, org=img,
             clip_denoised=args.clip_denoised,
             model_kwargs=model_kwargs,
             cond_fn=cond_fn,
             device=dist_util.dev(),
-            noise_level=args.noise_level
-        )
-        # end.record()
-        # th.cuda.synchronize()
-        # th.cuda.current_stream().synchronize()
-
-
-        # print('time for 1000', start.elapsed_time(end))
-
-        if args.dataset=='brats':
-            # pdb.set_trace()
-            # # Save the sampled outputs
-            save_image(visualize(sample[0, 0, ...]), 'results/plots/'+patient_ID+'/sampled output 0.png')
-            save_image(visualize(sample[0, 1, ...]), 'results/plots/'+patient_ID+'/sampled output 1.png')
-            save_image(visualize(sample[0, 2, ...]), 'results/plots/'+patient_ID+'/sampled output 2.png')
-            save_image(visualize(sample[0, 3, ...]), 'results/plots/'+patient_ID+'/sampled output 3.png')
+            noise_level = l
+            )
             difftot=abs(org[0, :4,...]-sample[0, ...]).sum(dim=0)
-            #results.append(int(has_anomaly(difftot) == bool(label)))
-            #print(results[-1])
-            difftot_norm = difftot/difftot.max()
-            Amap = difftot_norm > 0.5
-            #pdb.set_trace()
-            save_image(Amap, 'results/plots/'+patient_ID+'/Amap.png')
-            save_heatmap(visualize(difftot), 'results/plots/'+patient_ID+'/difftot.png')
-        break
-            # 
-          
-        # elif args.dataset=='chexpert':
-        #   viz.image(visualize(sample[0, ...]), opts=dict(caption="sampled output"+str(name)))
-        #   diff=abs(visualize(org[0, 0,...])-visualize(sample[0,0, ...]))
-        #   diff=np.array(diff.cpu())
-        #   viz.heatmap(np.flipud(diff), opts=dict(caption="diff"))
+            outputs.append(difftot.detach().cpu().numpy())
+            seg_maps.append(seg_map.detach().cpu().numpy())
+            labels.append(label.detach().cpu().numpy())
+
+            # save_heatmap(visualize(difftot), 'results/plots/val/' + F'{l} - {number[0]} - anomaly.png')
+            # save_heatmap(visualize(th.squeeze(seg_map)), 'results/plots/val/' + F'{l} - {number[0]} - gt.png')
+            
 
 
-    #     gathered_samples = [th.zeros_like(sample) for _ in range(dist.get_world_size())]
-    #     dist.all_gather(gathered_samples, sample)  # gather not supported with NCCL
-    #     all_images.extend([sample.cpu().numpy() for sample in gathered_samples])
-    #     if args.class_cond:
-    #         gathered_labels = [
-    #             th.zeros_like(classes) for _ in range(dist.get_world_size())
-    #         ]
-    #         dist.all_gather(gathered_labels, classes)
-    #         all_labels.extend([labels.cpu().numpy() for labels in gathered_labels])
+            # i += 1
+            # if i > 4:
+            #     break
         
+        outputs = np.array(outputs)
+        seg_maps = np.squeeze(np.array(seg_maps, dtype = int))
+        labels = np.array(labels)
+        logger.log(labels)
 
-    # arr = np.concatenate(all_images, axis=0)
-    # arr = arr[: args.num_samples]
-    # if args.class_cond:
-    #     label_arr = np.concatenate(all_labels, axis=0)
-    #     label_arr = label_arr[: args.num_samples]
-    
+        otsu_threshold = get_otsu_threshold(outputs)
+        seg_maps_pred = np.array(outputs > otsu_threshold, dtype = int)
+        print(otsu_threshold)
+        # for index in range(seg_maps_pred.shape[0]):
+        #     save_heatmap(visualize(seg_maps_pred[index,:,:]), 'results/plots/val/' + F'{l} - {index} - prediction.png')
 
-    # dist.barrier()
-    # logger.log("sampling complete")
-    #print("Evaluation complete")
-    #print(F"Accuracy: {sum(results)/len(results)}")
+        logger.log("L: ", l)
+        logger.log("DICE: ", dice_score(seg_maps_pred, seg_maps))
+        logger.log("IOU: ", iou_score(seg_maps_pred, seg_maps))
+        d = calculate_dict(seg_maps_pred, labels)
+        logger.log("Accuracy: ", accuracy(d))
+        logger.log("Sensitivity: ", sensitivity(d))
+        logger.log("Specificity: ", specificity(d))
+
+
+
+
+
+
+
+
+            
+        
+            # save_image(visualize(x_noisy[0, 0, ...]), 'results/plots/'+patient_ID+F'/noisy 0 {l}.png')
+            # save_image(visualize(x_noisy[0, 1, ...]), 'results/plots/'+patient_ID+F'/noisy 1 {l}.png')
+            # save_image(visualize(x_noisy[0, 2, ...]), 'results/plots/'+patient_ID+F'/noisy 2 {l}.png')
+            # save_image(visualize(x_noisy[0, 3, ...]), 'results/plots/'+patient_ID+F'/noisy 3 {l}.png')
+       
 
 
 def create_argparser():

@@ -960,8 +960,8 @@ class GaussianDiffusion:
         #viz.image(visualize(final["sample"].cpu()[0,2, ...]), opts=dict(caption="final 2" ))
         #viz.image(visualize(final["sample"].cpu()[0,3, ...]), opts=dict(caption="final 3" ))
 
-
-        return final["sample"], x_noisy, img
+        # print(final.keys())
+        return final["sample"], final['noisy'], img
 
 
     def ddim_sample_loop_progressive(
@@ -992,7 +992,7 @@ class GaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         indices = list(range(time-1))[::-1]
-        pdb.set_trace()
+        # pdb.set_trace()
         # print('indices', indices)
 
         if progress:
@@ -1023,7 +1023,9 @@ class GaussianDiffusion:
 
                 yield out
                 img = out["sample"]
-
+        noisy = img
+        out['noisy'] = img
+        yield out
         #viz.image(visualize(img.cpu()[0,0, ...]), opts=dict(caption="reversesample"))
         for i in indices:
             t = th.tensor([i] * shape[0], device=device)
@@ -1042,6 +1044,7 @@ class GaussianDiffusion:
                 model_kwargs=model_kwargs,
                 eta=eta,
                 )
+            out['noisy'] = noisy
             yield out
             img = out["sample"]
             saliency=out['saliency']

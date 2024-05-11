@@ -19,7 +19,7 @@ T2
 def load_file(filename):
     nib_img = nibabel.load(filename).get_fdata()
     index = np.array([0, 2, 3, 4])
-    label = torch.tensor(nib_img[1, :, :])
+    label = torch.tensor(nib_img[1, :, :]>0, dtype = int)
     nib_img = torch.tensor(nib_img[index, :, :])
     image = torch.zeros(4, 256, 256)
     label_padded = torch.zeros(256, 256)
@@ -34,7 +34,7 @@ def load_file(filename):
     return image.cuda(), label_padded.cuda()
 
 class BRATSDataset(torch.utils.data.Dataset):
-    def __init__(self, directory, test_flag=False):
+    def __init__(self, directory, eval_slices = None):
         '''
         directory is expected to contain some folder structure:
                   if some subfolder contains only files, all of these
@@ -54,7 +54,12 @@ class BRATSDataset(torch.utils.data.Dataset):
             if not dirs:
                 files.sort()
                 for f in files:
-                    self.database.append(os.path.join(root, f))
+                    if eval_slices is None:
+                        self.database.append(os.path.join(root, f))
+                    else:
+                        for slice in eval_slices:
+                            if str(slice) in f:
+                                self.database.append(os.path.join(root, f))
 
     def __getitem__(self, idx):
         filename = self.database[idx]

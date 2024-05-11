@@ -26,5 +26,5 @@ module load cuda/11.0
 # activate the virtual environment 
 source ./adlcv/bin/activate
 
-python scripts/evaluate_model.py --model_path ./results/brats2update050000Lasse2.pt --classifier_path ./results/modelbratsclass14999Lasse.pt $CLASSIFIER_FLAGS $MODEL_FLAGS $DIFFUSION_FLAGS $SAMPLE_FLAGS
+python scripts/evaluate_model.py --data_dir ~/Desktop/ADLCV-AnomalyDetection/data/brats/val --model_path ./results/brats2update050000Lasse2.pt --classifier_path ./results/modelbratsclass14999Lasse.pt $CLASSIFIER_FLAGS $MODEL_FLAGS $DIFFUSION_FLAGS $SAMPLE_FLAGS
 
